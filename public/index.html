@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .chat-box { max-height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
+        .message { margin-bottom: 10px; }
+        .username { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Simple Chat Application</h1>
+    <div class="chat-box" id="chat-box"></div>
+    <form id="chat-form">
+        <input type="text" id="username" placeholder="Your name" required />
+        <input type="text" id="message" placeholder="Your message" required />
+        <button type="submit">Send</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // DOM Elements
+        const chatBox = document.getElementById("chat-box");
+        const chatForm = document.getElementById("chat-form");
+        const usernameInput = document.getElementById("username");
+        const messageInput = document.getElementById("message");
+
+        // Load previous messages
+        socket.on("previousMessages", (messages) => {
+            messages.forEach(addMessage);
+        });
+
+        // Add new message
+        socket.on("newMessage", addMessage);
+
+        function addMessage(data) {
+            const messageElement = document.createElement("div");
+            messageElement.classList.add("message");
+            messageElement.innerHTML = `<span class="username">${data.username}:</span> ${data.message}`;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll
+        }
+
+        // Handle form submission
+        chatForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const message = {
+                username: usernameInput.value,
+                message: messageInput.value
+            };
+
+            socket.emit("sendMessage", message);
+            messageInput.value = ""; // Clear input
+        });
+    </script>
+</body>
+</html>
